@@ -25,3 +25,22 @@ class Item(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Order(models.Model):
+    """Класс для корзины (заказа)"""
+
+    item = models.ManyToManyField(
+        Item,
+        verbose_name='Заказ',
+    )
+
+    class Meta:
+        """Общие параметры модели информации о заказах."""
+
+        ordering = ('id', )
+        verbose_name = 'Заказ'
+        verbose_name_plural = 'Заказы'
+
+    def __str__(self):
+        return f'Заказ № {self.id}'
