@@ -35,6 +35,20 @@ class Order(models.Model):
         verbose_name='Заказ',
     )
 
+    tax = models.ForeignKey(
+        'Tax',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='order',
+    )
+
+    discount = models.ForeignKey(
+        'Discount',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='order',
+    )
+
     class Meta:
         """Общие параметры модели информации о заказах."""
 
@@ -44,3 +58,39 @@ class Order(models.Model):
 
     def __str__(self):
         return f'Заказ № {self.id}'
+
+
+class Discount(models.Model):
+    """Класс для скидки"""
+
+    rate = models.IntegerField(
+        verbose_name='Скидка',
+    )
+
+    class Meta:
+        """Общие параметры модели информации о скидках."""
+
+        ordering = ('rate', )
+        verbose_name = 'Скидка'
+        verbose_name_plural = 'Скидки'
+
+    def __str__(self):
+        return f'Скидка {self.rate}%'
+
+
+class Tax(models.Model):
+    """Класс для налога"""
+
+    rate = models.IntegerField(
+        verbose_name='Налог',
+    )
+
+    class Meta:
+        """Общие параметры модели информации о налогах."""
+
+        ordering = ('rate', )
+        verbose_name = 'Налог'
+        verbose_name_plural = 'Налоги'
+
+    def __str__(self):
+        return f'Налог {self.rate}%'
