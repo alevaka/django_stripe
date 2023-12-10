@@ -88,11 +88,6 @@ def add_item_to_order(request: HttpRequest, pk: int) -> JsonResponse:
 def show_order(request: HttpRequest, pk: int) -> JsonResponse:
     """Возвращает JSON списка товаров в заказе"""
 
-    # order = get_object_or_404(Order, pk=pk)
-    # items = []
-    # for item in order.item.all():
-    #     items.append(str(item))
-    # return JsonResponse({'order_items': items})
     template = 'items/order.html'
     order = get_object_or_404(Order, pk=pk)
     items = []
@@ -100,10 +95,14 @@ def show_order(request: HttpRequest, pk: int) -> JsonResponse:
     for item in order.item.all():
         total += item.price
         items.append(item)
+    discount = order.discount.rate if order.discount is not None else 0
+    total_with_discount = round((total * (1 - discount/100)), 2)
     context = {
       'pk': pk,
       'items': items,
-      'total': total,
+      'total': f'{total:.2f}',
+      'discount': discount,
+      'total_with_discount': f'{total_with_discount:.2f}',
       'STRIPE_PUBLIC_API_KEY': STRIPE_API_PUBLIC_KEY,
     }
 
@@ -114,7 +113,16 @@ def pay_order(request: HttpRequest, pk: int) -> JsonResponse:
     """Оплата заказа. Создаёт Stripe Session и возвращает id сессии"""
 
     order = get_object_or_404(Order, pk=pk)
+    stripe.api_key = STRIPE_API_SECRET_KEY
+
     line_items = []
+    tax_rate = order.tax.rate if order.tax is not None else 0
+    tax = stripe.TaxRate.create(
+        display_name='Налог',
+        inclusive=False,
+        percentage=tax_rate,
+        description='Налог',
+    )
     for item in order.item.all():
         line_items.append(
             {
@@ -126,12 +134,21 @@ def pay_order(request: HttpRequest, pk: int) -> JsonResponse:
                 'unit_amount': int(item.price * 100)
               },
               'quantity': 1,
+              'tax_rates': [tax.id,]
             },
         )
-    stripe.api_key = STRIPE_API_SECRET_KEY
+    discounts = []
+    if order.discount is not None:
+        coupon = stripe.Coupon.create(
+            percent_off=order.discount.rate,
+            duration='once',
+        )
+        discounts = [{'coupon': coupon.id}]
+
     session = stripe.checkout.Session.create(
           mode='payment',
           line_items=line_items,
+          discounts=discounts,
           success_url=f'http://localhost:8000/api/order/{pk}/',
           cancel_url=f'http://localhost:8000/api/order/{pk}/'
       )
