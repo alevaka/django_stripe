@@ -10,6 +10,11 @@ from .models import Item, Order
 STRIPE_API_PUBLIC_KEY = os.getenv('STRIPE_API_PUBLIC_KEY')
 STRIPE_API_SECRET_KEY = os.getenv('STRIPE_API_SECRET_KEY')
 
+CURRENCY_SYMBOLS = {
+  'USD': '$',
+  'RUB': '₽',
+}
+
 
 def buy_item(request: HttpRequest, pk: int) -> JsonResponse:
     """Функция для покупки одного товара.
@@ -23,7 +28,7 @@ def buy_item(request: HttpRequest, pk: int) -> JsonResponse:
             'product_data': {
               'name': item.name,
             },
-            'currency': 'RUB',
+            'currency': item.currency,
             'unit_amount': item.price * 100,
           },
           'quantity': 1,
@@ -49,11 +54,13 @@ def show_item(request: HttpRequest, pk: int) -> HttpResponse:
 
     template = 'items/item.html'
     item = get_object_or_404(Item, pk=pk)
+
     context = {
       'pk': pk,
       'name': item.name,
       'description': item.description,
       'price': item.price,
+      'currency': CURRENCY_SYMBOLS[item.currency],
       'STRIPE_PUBLIC_API_KEY': STRIPE_API_PUBLIC_KEY,
     }
 
@@ -85,6 +92,17 @@ def add_item_to_order(request: HttpRequest, pk: int) -> JsonResponse:
     return JsonResponse({'order_items': items})
 
 
+def exchange_rate(currency_from: str, currency_to: str) -> int:
+    """Конвертация валют.
+       Для тестирования примем, что у нас только две валюты
+       и курс у них стабилен."""
+    rates = {
+        'USD_RUB': 100,
+        'RUB_USD': 0.01,
+    }
+    return rates.get(f'{currency_from}_{currency_to}') or 999
+
+
 def show_order(request: HttpRequest, pk: int) -> JsonResponse:
     """Возвращает JSON списка товаров в заказе"""
 
@@ -92,8 +110,13 @@ def show_order(request: HttpRequest, pk: int) -> JsonResponse:
     order = get_object_or_404(Order, pk=pk)
     items = []
     total = 0
+    first_currency = None
     for item in order.item.all():
-        total += item.price
+        first_currency = first_currency or item.currency
+        converted_price = (item.price if first_currency == item.currency
+                           else exchange_rate(item.currency, first_currency)
+                           * item.price)
+        total += converted_price
         items.append(item)
     discount = order.discount.rate if order.discount is not None else 0
     total_with_discount = round((total * (1 - discount/100)), 2)
@@ -103,14 +126,17 @@ def show_order(request: HttpRequest, pk: int) -> JsonResponse:
       'total': f'{total:.2f}',
       'discount': discount,
       'total_with_discount': f'{total_with_discount:.2f}',
+      'first_currency': first_currency,
       'STRIPE_PUBLIC_API_KEY': STRIPE_API_PUBLIC_KEY,
+      'CURRENCY_SYMBOLS': CURRENCY_SYMBOLS,
     }
 
     return render(request, template, context)
 
 
 def pay_order(request: HttpRequest, pk: int) -> JsonResponse:
-    """Оплата заказа. Создаёт Stripe Session и возвращает id сессии"""
+    """Оплата заказа. Создаёт Stripe Session и возвращает id сессии.
+    Общая цена приводится к валюте первого товара"""
 
     order = get_object_or_404(Order, pk=pk)
     stripe.api_key = STRIPE_API_SECRET_KEY
@@ -123,15 +149,20 @@ def pay_order(request: HttpRequest, pk: int) -> JsonResponse:
         percentage=tax_rate,
         description='Налог',
     )
+    first_currency = None
     for item in order.item.all():
+        first_currency = first_currency or item.currency
+        converted_price = (item.price if first_currency == item.currency
+                           else exchange_rate(item.currency, first_currency)
+                           * item.price)
         line_items.append(
             {
               'price_data': {
-                'currency': 'RUB',
+                'currency': first_currency,
                 'product_data': {
                   'name': item.name,
                 },
-                'unit_amount': int(item.price * 100)
+                'unit_amount': int(converted_price * 100)
               },
               'quantity': 1,
               'tax_rates': [tax.id,]
@@ -144,7 +175,6 @@ def pay_order(request: HttpRequest, pk: int) -> JsonResponse:
             duration='once',
         )
         discounts = [{'coupon': coupon.id}]
-
     session = stripe.checkout.Session.create(
           mode='payment',
           line_items=line_items,
