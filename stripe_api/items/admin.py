@@ -6,9 +6,9 @@ from .models import Discount, Item, Order, Tax
 @admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):
     """Отображение данных модели Item в интерфейсе администратора."""
-    list_display = ('name', 'description', 'price',)
+    list_display = ('name', 'description', 'price', 'currency',)
     list_display_links = ('name',)
-    search_fields = ('name', 'description')
+    search_fields = ('name', 'description',)
     search_help_text = 'Поиск по названию или описанию товара'
 
 

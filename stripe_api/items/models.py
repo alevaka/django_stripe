@@ -3,7 +3,10 @@ from django.db import models
 
 class Item(models.Model):
     """Класс для товара"""
-
+    CURRENCY_CHOICES = [
+        ('USD', 'US Dollar'),
+        ('RUB', 'Russian Ruble'),
+    ]
     name = models.CharField(
         max_length=200,
         null=False,
@@ -14,6 +17,12 @@ class Item(models.Model):
     )
     price = models.IntegerField(
         verbose_name='Цена',
+    )
+    currency = models.CharField(
+        max_length=5,
+        null=False,
+        choices=CURRENCY_CHOICES,
+        verbose_name='Валюта',
     )
 
     class Meta:
