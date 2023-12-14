@@ -11,22 +11,21 @@
 ```console
 git clone https://github.com/alevaka/django_stripe.git
 
-cd stripe_django_api/stripe_api
+cd django_stripe
 ```
 
 ### Создать файл с переменными среды (пример ниже)
 ```console
 touch .env
-docker compose up -d
-docker compose exec web python3 manage.py createsuperuser
+vi .env
 ```
-
 ### Пример заполнения .env
-
 ```
+STRIPE_API_SECRET_KEY=sk_test_VOyyjgzqm8I3SrBqh9Y
 STRIPE_API_PUBLIC_KEY=pk_test_VOyyjgzqm8I3SrBqh9Y
-DJANGO_SECRET_KEY=GdGDHNQ_qdgYP8BZAAI1w
-DJANGO_DEBUG_STATUS=False
+HOST_IP=127.0.0.1
+HOST_ADDRESS=stripe.example.com
+DJANGO_SECRET_KEY=Gdjango-insecure-z@s35_eoo
 DB_ENGINE=django.db.backends.postgresql
 DB_NAME=postgres
 POSTGRES_USER=postgres
@@ -34,6 +33,10 @@ POSTGRES_PASSWORD=postgres
 DB_HOST=db
 DB_PORT=5432
 ```
+### Запуск docker compose и создание администратора Django
+```console
+docker compose up -d
+docker compose exec web python3 manage.py createsuperuser```
 
 ## API
 ```
@@ -48,7 +51,8 @@ api/order/<order_id>/pay/ - оплатить заказ
 
 ## Тестовый сервер
 
-http://stripe-api.myvnc.com/admin/ 
+http://stripe-api.myvnc.com:80/admin/
+http://stripe-api.myvnc.com:80/api/item/1/
 ```
 login: admin
 password: admin

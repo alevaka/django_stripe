@@ -10,7 +10,7 @@ from .models import Item, Order
 
 STRIPE_API_PUBLIC_KEY = os.getenv('STRIPE_API_PUBLIC_KEY')
 STRIPE_API_SECRET_KEY = os.getenv('STRIPE_API_SECRET_KEY')
-HOST_IP = os.getenv('HOST_IP')
+HOST_ADDRESS = os.getenv('HOST_ADDRESS')
 
 CURRENCY_SYMBOLS = {
   'USD': '$',
@@ -39,7 +39,7 @@ def buy_item(request: HttpRequest, pk: int) -> JsonResponse:
     stripe.api_key = STRIPE_API_SECRET_KEY
     protocol = 'https' if request.is_secure() else 'http'
     item_url_path = reverse('show_item', args=[pk])
-    item_url = f'{protocol}://{HOST_IP}{item_url_path}'
+    item_url = f'{protocol}://{HOST_ADDRESS}{item_url_path}'
     session = stripe.checkout.Session.create(
           mode='payment',
           line_items=line_items,
@@ -182,7 +182,7 @@ def pay_order(request: HttpRequest, pk: int) -> JsonResponse:
         discounts = [{'coupon': coupon.id}]
     protocol = 'https' if request.is_secure() else 'http'
     order_url_path = reverse('show_order', args=[pk])
-    order_url = f'{protocol}://{HOST_IP}{order_url_path}'
+    order_url = f'{protocol}://{HOST_ADDRESS}{order_url_path}'
     session = stripe.checkout.Session.create(
           mode='payment',
           line_items=line_items,
