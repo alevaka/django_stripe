@@ -3,12 +3,14 @@ import os
 import stripe
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 
 from .models import Item, Order
 
 STRIPE_API_PUBLIC_KEY = os.getenv('STRIPE_API_PUBLIC_KEY')
 STRIPE_API_SECRET_KEY = os.getenv('STRIPE_API_SECRET_KEY')
+HOST_IP = os.getenv('HOST_IP')
 
 CURRENCY_SYMBOLS = {
   'USD': '$',
@@ -35,11 +37,14 @@ def buy_item(request: HttpRequest, pk: int) -> JsonResponse:
         },
     )
     stripe.api_key = STRIPE_API_SECRET_KEY
+    protocol = 'https' if request.is_secure() else 'http'
+    item_url_path = reverse('show_item', args=[pk])
+    item_url = f'{protocol}://{HOST_IP}{item_url_path}'
     session = stripe.checkout.Session.create(
           mode='payment',
           line_items=line_items,
-          success_url=f'http://localhost:8000/api/item/{pk}/',
-          cancel_url=f'http://localhost:8000/api/item/{pk}/',
+          success_url=item_url,
+          cancel_url=item_url,
       )
 
     json_data = {
@@ -175,12 +180,15 @@ def pay_order(request: HttpRequest, pk: int) -> JsonResponse:
             duration='once',
         )
         discounts = [{'coupon': coupon.id}]
+    protocol = 'https' if request.is_secure() else 'http'
+    order_url_path = reverse('show_order', args=[pk])
+    order_url = f'{protocol}://{HOST_IP}{order_url_path}'
     session = stripe.checkout.Session.create(
           mode='payment',
           line_items=line_items,
           discounts=discounts,
-          success_url=f'http://localhost:8000/api/order/{pk}/',
-          cancel_url=f'http://localhost:8000/api/order/{pk}/'
+          success_url=order_url,
+          cancel_url=order_url,
       )
 
     json_data = {
