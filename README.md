@@ -36,8 +36,8 @@ DB_PORT=5432
 ### Запуск docker compose и создание администратора Django
 ```console
 docker compose up -d
-docker compose exec web python3 manage.py createsuperuser```
-
+docker compose exec web python3 manage.py createsuperuser
+```
 ## API
 ```
 admin/ - Admin панель
@@ -52,6 +52,7 @@ api/order/<order_id>/pay/ - оплатить заказ
 ## Тестовый сервер
 
 http://stripe-api.myvnc.com:80/admin/
+
 http://stripe-api.myvnc.com:80/api/item/1/
 ```
 login: admin
