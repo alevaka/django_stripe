@@ -31,7 +31,7 @@ DEBUG = False
 HOST_IP = os.getenv('HOST_IP')
 HOST_ADDRESS = os.getenv('HOST_ADDRESS')
 ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS = [f'http://{HOST_IP}', f'https://{HOST_ADDRESS}']
+CSRF_TRUSTED_ORIGINS = [f'http://{HOST_IP}', f'http://{HOST_ADDRESS}']
 
 # Application definition
 
