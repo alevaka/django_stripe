@@ -56,5 +56,5 @@ http://stripe-api.myvnc.com:80/admin/
 http://stripe-api.myvnc.com:80/api/item/1/
 ```
 login: admin
-password: admin
+password: password
 ```
