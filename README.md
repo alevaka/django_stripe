@@ -49,12 +49,3 @@ api/order/<order_id>/ - показть список товаров в заказ
 api/order/<order_id>/pay/ - оплатить заказ
 ```
 
-## Тестовый сервер
-
-http://stripe-api.myvnc.com:80/admin/
-
-http://stripe-api.myvnc.com:80/api/item/1/
-```
-login: admin
-password: password
-```
