@@ -26,8 +26,7 @@ jobs:
           docker compose down;
           echo '--- LIST OF DOCKER CONTAINERS AFTER STOPING DOCKER CONTAINERS ---';
           docker ps;
-          ls -al;
-          docker compose --file ./docker-compose.yml up -d;
+          docker compose --file docker-compose.yaml up -d;
           docker system prune --all --force;
           echo '--- LIST OF DOCKER CONTAINERS AFTER STARTING DOCKER CONTAINERS ---';
           docker ps;
