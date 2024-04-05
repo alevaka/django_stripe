@@ -17,7 +17,8 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         script: |
           echo '--- START WORK ON REMOTE SERVER ---';
-          cd ${{ secrets.PROJECT_FOLDER }};
+          # cd ${{ secrets.PROJECT_FOLDER }};
+          # cd django_stripe;
           echo '--- LIST OF FILES ---';
           ls -al;
           echo '--- GIT INFORMATION ---'
